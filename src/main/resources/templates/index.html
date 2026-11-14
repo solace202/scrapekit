@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('ScrapeKit · Jobs')}"></head>
+<body>
+<header th:replace="~{layout :: header}"></header>
+<main>
+    <div class="stats">
+        <div class="stat"><b th:text="${#lists.size(rows)}">3</b><span>Jobs</span></div>
+        <div class="stat"><b th:text="${#numbers.formatInteger(totalItems, 1, 'COMMA')}">0</b><span>Records stored</span></div>
+        <div class="stat"><b th:text="${#lists.size(recent)}">0</b><span>Recent runs</span></div>
+        <div class="stat"><b th:text="${fmt.zone()}">UTC</b><span>Scheduler time zone</span></div>
+    </div>
+
+    <div class="card">
+        <h2>Scrape jobs</h2>
+        <table>
+            <tr><th>Job</th><th>Source</th><th>Schedule</th><th>Last run</th><th class="num">Records</th><th>Run</th><th>Export</th></tr>
+            <tr th:each="r : ${rows}">
+                <td><a th:href="@{/jobs/{id}(id=${r.job().id()})}" th:text="${r.job().name()}">Books</a>
+                    <div class="muted" th:text="${r.job().startUrl()}">url</div></td>
+                <td><span class="src" th:text="${r.job().source()}">books</span></td>
+                <td><span th:if="${r.job().cron() != null}"><span class="src" th:text="${r.job().cron()}">cron</span>
+                        <div class="muted" th:if="${r.next() != null}" th:text="'next ' + ${r.next()}">next</div></span>
+                    <span class="muted" th:if="${r.job().cron() == null}">manual</span></td>
+                <td><span th:if="${r.last() != null}">
+                        <span class="badge" th:classappend="${fmt.badge(r.last().status())}" th:text="${r.last().status()}">OK</span>
+                        <div class="muted" th:text="${fmt.time(r.last().startedAt())} + ' · ' + ${fmt.duration(r.last())}">t</div></span>
+                    <span class="muted" th:if="${r.last() == null}">never</span></td>
+                <td class="num" th:text="${#numbers.formatInteger(r.items(), 1, 'COMMA')}">0</td>
+                <td><form class="inline" method="post" th:action="@{/jobs/{id}/run(id=${r.job().id()})}">
+                    <button class="btn primary" type="submit">Run now</button></form></td>
+                <td><a class="btn" th:href="@{/api/jobs/{id}/export(id=${r.job().id()},format='xlsx')}">Excel</a>
+                    <a class="btn" th:href="@{/api/jobs/{id}/export(id=${r.job().id()},format='csv')}">CSV</a>
+                    <a class="btn" th:href="@{/api/jobs/{id}/export(id=${r.job().id()},format='json')}">JSON</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Run history</h2>
+        <table>
+            <tr><th>#</th><th>Job</th><th>Trigger</th><th>Status</th><th>Started</th><th class="num">Duration</th>
+                <th class="num">Pages</th><th class="num">Found</th><th class="num">New</th><th class="num">Updated</th>
+                <th class="num">Unchanged</th><th class="num">Retries</th><th>Notes</th></tr>
+            <tr th:each="run : ${recent}">
+                <td th:text="${run.id()}">1</td>
+                <td th:text="${jobNames.get(run.jobId())}">job</td>
+                <td class="muted" th:text="${run.trigger()}">API</td>
+                <td><span class="badge" th:classappend="${fmt.badge(run.status())}" th:text="${run.status()}">OK</span></td>
+                <td th:text="${fmt.time(run.startedAt())}">t</td>
+                <td class="num" th:text="${fmt.duration(run)}">1s</td>
+                <td class="num" th:text="${run.pagesFetched()}">0</td>
+                <td class="num" th:text="${run.itemsFound()}">0</td>
+                <td class="num" th:text="${run.itemsNew()}">0</td>
+                <td class="num" th:text="${run.itemsUpdated()}">0</td>
+                <td class="num" th:text="${run.itemsUnchanged()}">0</td>
+                <td class="num" th:text="${run.retries()}">0</td>
+                <td class="msg" th:text="${run.message()}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(recent)}"><td colspan="13" class="muted">No runs yet. Click “Run now”.</td></tr>
+        </table>
+    </div>
+</main>
+</body>
+</html>

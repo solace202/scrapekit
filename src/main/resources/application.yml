@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: scrapekit
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/scrapekit}
+    username: ${DB_USER:scrapekit}
+    password: ${DB_PASSWORD:scrapekit}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  flyway:
+    enabled: true
+  threads:
+    virtual:
+      enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  thymeleaf:
+    cache: true
+
+server:
+  port: ${PORT:8080}
+
+scrapekit:
+  http:
+    user-agent: ${SCRAPER_USER_AGENT:ScrapeKit/0.1 (+https://github.com/solace202/scrapekit)}
+    max-attempts: ${SCRAPER_MAX_ATTEMPTS:4}
+    initial-backoff: ${SCRAPER_INITIAL_BACKOFF:1s}
+    max-backoff: ${SCRAPER_MAX_BACKOFF:30s}
+    default-delay: ${SCRAPER_DEFAULT_DELAY:500ms}
+    respect-robots: ${SCRAPER_RESPECT_ROBOTS:true}
+  scheduler:
+    enabled: ${SCHEDULER_ENABLED:true}
+    zone: ${SCHEDULER_ZONE:UTC}
+  sheets:
+    # Optional Google Sheets export (see README). Empty = disabled.
+    credentials-file: ${SHEETS_CREDENTIALS_FILE:}
+    spreadsheet-id: ${SHEETS_SPREADSHEET_ID:}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  paths-to-match: /api/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

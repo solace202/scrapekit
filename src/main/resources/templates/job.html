@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('ScrapeKit · ' + ${job.name()})}"></head>
+<body>
+<header th:replace="~{layout :: header}"></header>
+<main>
+    <div class="notice" th:if="${notice}" th:text="${notice}">notice</div>
+    <div class="card">
+        <h2 th:text="${job.name()}">Job</h2>
+        <div class="kv">
+            <div>Source</div><div><span class="src" th:text="${job.source()}">books</span></div>
+            <div>Start URL</div><div><a th:href="${job.startUrl()}" th:text="${job.startUrl()}">url</a></div>
+            <div>Schedule</div><div><span th:text="${job.cron() ?: 'manual only'}">cron</span>
+                <span class="muted" th:if="${next != null}" th:text="' · next run ' + ${next} + ' ' + ${fmt.zone()}"></span></div>
+            <div>Politeness</div><div th:text="${job.delayMs()} + ' ms between requests · max ' + ${job.maxPages()} + ' pages · robots.txt respected'">delay</div>
+            <div>Records</div><div th:text="${#numbers.formatInteger(total, 1, 'COMMA')}">0</div>
+            <div>Actions</div>
+            <div><form class="inline" method="post" th:action="@{/jobs/{id}/run(id=${job.id()})}"><button class="btn primary">Run now</button></form>
+                <a class="btn" th:href="@{/api/jobs/{id}/export(id=${job.id()},format='xlsx')}">Excel</a>
+                <a class="btn" th:href="@{/api/jobs/{id}/export(id=${job.id()},format='csv')}">CSV</a>
+                <a class="btn" th:href="@{/api/jobs/{id}/export(id=${job.id()},format='json')}">JSON</a></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Run history</h2>
+        <table>
+            <tr><th>#</th><th>Trigger</th><th>Status</th><th>Started</th><th class="num">Duration</th><th class="num">Pages</th>
+                <th class="num">Found</th><th class="num">New</th><th class="num">Updated</th><th class="num">Unchanged</th>
+                <th class="num">Retries</th><th>Notes</th><th>New records</th></tr>
+            <tr th:each="run : ${runs}">
+                <td th:text="${run.id()}">1</td>
+                <td class="muted" th:text="${run.trigger()}">API</td>
+                <td><span class="badge" th:classappend="${fmt.badge(run.status())}" th:text="${run.status()}">OK</span></td>
+                <td th:text="${fmt.time(run.startedAt())}">t</td>
+                <td class="num" th:text="${fmt.duration(run)}">1s</td>
+                <td class="num" th:text="${run.pagesFetched()}">0</td>
+                <td class="num" th:text="${run.itemsFound()}">0</td>
+                <td class="num" th:text="${run.itemsNew()}">0</td>
+                <td class="num" th:text="${run.itemsUpdated()}">0</td>
+                <td class="num" th:text="${run.itemsUnchanged()}">0</td>
+                <td class="num" th:text="${run.retries()}">0</td>
+                <td class="msg" th:text="${run.message()}"></td>
+                <td><a th:if="${run.itemsNew() > 0}" class="btn"
+                       th:href="@{/api/jobs/{id}/export(id=${job.id()},format='xlsx',newInRun=${run.id()})}">Excel</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Data preview <span class="muted" th:text="'first ' + ${#lists.size(items)} + ' of ' + ${total}"></span></h2>
+        <table>
+            <tr><th th:each="c : ${columns}" th:text="${c.header()}">col</th></tr>
+            <tr th:each="i : ${items}">
+                <td th:each="c : ${columns}" class="clip" th:text="${fmt.cell(i.fields().get(c.key()), c)}">v</td>
+            </tr>
+        </table>
+    </div>
+</main>
+</body>
+</html>

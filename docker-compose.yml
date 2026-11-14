@@ -1,0 +1,41 @@
+name: scrapekit
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: scrapekit
+      POSTGRES_USER: scrapekit
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-scrapekit}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scrapekit -d scrapekit"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    image: scrapekit:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/scrapekit
+      DB_USER: scrapekit
+      DB_PASSWORD: ${DB_PASSWORD:-scrapekit}
+      SCHEDULER_ZONE: ${SCHEDULER_ZONE:-UTC}
+      # Optional Google Sheets export: mount a service-account key and point to it
+      # SHEETS_CREDENTIALS_FILE: /run/secrets/google-sa.json
+      # SHEETS_SPREADSHEET_ID: your-spreadsheet-id
+    ports:
+      - "${APP_HOST_PORT:-8080}:8080"
+
+volumes:
+  pgdata:

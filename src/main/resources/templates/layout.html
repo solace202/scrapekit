@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <title th:text="${title}">ScrapeKit</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<header th:fragment="header">
+    <h1><a href="/" style="color:#fff">ScrapeKit</a></h1>
+    <span class="sub">scheduled scraping · retries · rate limits · dedup · CSV / Excel / JSON export</span>
+    <nav><a href="/">Jobs</a><a href="/swagger-ui.html">API docs</a><a href="https://github.com/solace202/scrapekit">GitHub</a></nav>
+</header>
+</body>
+</html>
